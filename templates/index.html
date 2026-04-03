@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Number Lookup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px;
+            background: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .result {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .result table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .result td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result td:first-child {
+            font-weight: bold;
+            color: #555;
+            width: 45%;
+        }
+
+        .valid {
+            color: green;
+            font-weight: bold;
+        }
+
+        .invalid {
+            color: red;
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📱 Phone Number Lookup</h1>
+
+    <form method="POST">
+        <input type="text" name="phone" placeholder="Enter phone number with country code e.g. +917654321098" required>
+        <button type="submit">Lookup</button>
+    </form>
+
+    {% if result %}
+    <div class="result">
+        {% if result.error %}
+        <p class="error">❌ Error: {{ result.error }}</p>
+
+        {% elif not result.valid %}
+        <p class="invalid">❌ Invalid phone number.</p>
+
+        {% else %}
+        <p class="valid">✅ Valid Phone Number</p>
+        <table>
+            <tr>
+                <td>📍 Location</td>
+                <td>{{ result.location }}</td>
+            </tr>
+            <tr>
+                <td>📶 Carrier</td>
+                <td>{{ result.carrier }}</td>
+            </tr>
+            <tr>
+                <td>🌍 Region Code</td>
+                <td>{{ result.region_code }}</td>
+            </tr>
+            <tr>
+                <td>🔢 Country Code</td>
+                <td>{{ result.country_code }}</td>
+            </tr>
+            <tr>
+                <td>📞 National Number</td>
+                <td>{{ result.national_number }}</td>
+            </tr>
+            <tr>
+                <td>📋 E164 Format</td>
+                <td>{{ result.e164 }}</td>
+            </tr>
+            <tr>
+                <td>🌐 International Format</td>
+                <td>{{ result.international }}</td>
+            </tr>
+            <tr>
+                <td>🏠 National Format</td>
+                <td>{{ result.national }}</td>
+            </tr>
+            <tr>
+                <td>📱 Number Type</td>
+                <td>{{ result.number_type }}</td>
+            </tr>
+            <tr>
+                <td>✅ Is Possible</td>
+                <td>{{ "Yes" if result.is_possible else "No" }}</td>
+            </tr>
+            <tr>
+                <td>🕐 Timezone(s)</td>
+                <td>{{ result.timezones | join(", ") }}</td>
+            </tr>
+        </table>
+        {% endif %}
+    </div>
+    {% endif %}
+</body>
+
+</html>
