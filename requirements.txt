@@ -3,4 +3,3 @@ phonenumbers
 geocoder
 carrier
 timezone
-PhoneNumberType
