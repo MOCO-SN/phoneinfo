@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Number Lookup | Smart Validator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>NexusLookup · Glassmorphic Phone Validator</title>
     <style>
         * {
             margin: 0;
@@ -12,628 +11,635 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 2rem 1rem;
-            position: relative;
-        }
-
-        /* Animated background effect */
-        body::before {
-            content: '';
+        /* ========= PARTICLE CANVAS (fullscreen background) ========= */
+        #particleCanvas {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.03)" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') repeat-x bottom;
-            opacity: 0.4;
-            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: block;
+            background: radial-gradient(circle at 20% 30%, #0a0f2a, #030614);
+            pointer-events: none;  /* allows clicking through canvas */
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
             position: relative;
             z-index: 1;
-        }
-
-        /* Main card */
-        .main-card {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            border-radius: 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 8px 20px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            transition: transform 0.2s ease;
-        }
-
-        .main-card:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Header */
-        .header {
-            background: linear-gradient(120deg, #1e293b 0%, #0f172a 100%);
-            padding: 2rem 2rem 1.8rem 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '📞';
-            position: absolute;
-            font-size: 5rem;
-            opacity: 0.05;
-            bottom: -20px;
-            right: -20px;
-            transform: rotate(-15deg);
-            pointer-events: none;
-        }
-
-        .header h1 {
-            color: white;
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
         }
 
-        .header h1 span {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.25rem 0.75rem;
-            border-radius: 100px;
-            font-size: 0.8rem;
-            font-weight: 500;
+        /* glassmorphic main container */
+        .glass-orb {
+            max-width: 860px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(15, 25, 45, 0.45);
+            backdrop-filter: blur(14px) saturate(180%);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
         }
 
-        .header p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
+        /* inner frosted layers for depth */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            padding: 2rem 2rem 1.6rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        /* Form section */
-        .form-section {
-            padding: 2rem 2rem 1.5rem 2rem;
-            background: white;
-        }
-
-        .input-group {
+        .glass-header h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFFFFF, #c0e0ff, #aad0ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge-glow {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 0.25rem 0.9rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: white;
+            border: 0.5px solid rgba(255,255,240,0.4);
+        }
+
+        .glass-header p {
+            color: rgba(255, 255, 255, 0.75);
+            margin-top: 0.7rem;
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        /* form area */
+        .glass-form {
+            padding: 2rem 2rem 1rem 2rem;
+            background: rgba(10, 18, 28, 0.3);
         }
 
         .input-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #334155;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-        }
-
-        .input-label i {
-            font-style: normal;
-            font-size: 1.1rem;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.6rem;
         }
 
         .input-wrapper {
-            position: relative;
             display: flex;
             align-items: center;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 1rem;
-            transition: all 0.2s ease;
+            background: rgba(20, 30, 45, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 1.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .input-wrapper:focus-within {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-            background: white;
+            border-color: rgba(120, 180, 255, 0.8);
+            background: rgba(25, 40, 60, 0.7);
+            box-shadow: 0 0 0 4px rgba(100, 150, 255, 0.2);
         }
 
-        .country-code-hint {
-            padding: 0 0 0 1rem;
-            font-size: 1.1rem;
+        .country-hint {
+            padding: 0 0 0 1.2rem;
+            font-size: 1.2rem;
             font-weight: 600;
-            color: #64748b;
-            border-right: 2px solid #e2e8f0;
-            background: #f1f5f9;
+            color: #bbd9ff;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            margin-right: 0.5rem;
+            background: rgba(0,0,0,0.2);
             height: 100%;
+            border-radius: 1.5rem 0 0 1.5rem;
             display: flex;
             align-items: center;
-            border-radius: 1rem 0 0 1rem;
         }
 
-        input[type="text"] {
+        input {
             flex: 1;
-            padding: 0.9rem 1rem;
-            font-size: 1rem;
-            border: none;
             background: transparent;
+            border: none;
+            padding: 1rem 1rem 1rem 0.5rem;
+            font-size: 1rem;
             font-weight: 500;
-            color: #0f172a;
+            color: white;
             outline: none;
             font-family: 'Inter', monospace;
         }
 
-        input[type="text"]::placeholder {
-            color: #94a3b8;
+        input::placeholder {
+            color: rgba(200, 215, 240, 0.5);
             font-weight: 400;
             font-family: 'Inter', sans-serif;
         }
 
         button {
-            margin-top: 1.5rem;
+            margin-top: 1.8rem;
             width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0.9rem;
+            background: rgba(100, 150, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
+            font-weight: 700;
             font-size: 1rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 1rem;
+            border-radius: 2rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        button:hover::before {
-            left: 100%;
+            gap: 12px;
+            letter-spacing: 0.3px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
         }
 
         button:hover {
+            background: rgba(80, 130, 255, 0.95);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 12px 24px rgba(0, 30, 100, 0.4);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         button:active {
             transform: translateY(1px);
         }
 
-        /* Result section */
-        .result-section {
+        /* result glass card */
+        .glass-result {
             padding: 0 2rem 2rem 2rem;
-            background: white;
         }
 
         .result-card {
-            background: #ffffff;
-            border-radius: 1.25rem;
-            border: 1px solid #eef2ff;
+            background: rgba(12, 22, 35, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 1.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             transition: all 0.2s;
         }
 
         .result-header {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            padding: 1rem 1.5rem;
-            border-bottom: 2px solid #e2e8f0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.9rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
         .valid-badge {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 0.35rem 1rem;
-            border-radius: 100px;
+            background: rgba(34, 197, 94, 0.85);
+            backdrop-filter: blur(4px);
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
             font-size: 0.75rem;
             font-weight: 700;
+            color: white;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+            gap: 6px;
+            border: 0.5px solid rgba(255,255,200,0.5);
         }
 
         .invalid-badge {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            padding: 0.35rem 1rem;
-            border-radius: 100px;
+            background: rgba(239, 68, 68, 0.85);
+            backdrop-filter: blur(4px);
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
             font-size: 0.75rem;
             font-weight: 700;
+            color: white;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 6px;
         }
 
         .error-message {
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            padding: 1rem 1.25rem;
-            border-radius: 0.75rem;
-            color: #991b1b;
+            background: rgba(153, 27, 27, 0.25);
+            border-left: 4px solid #ff7b7b;
+            padding: 1rem 1.2rem;
+            margin: 1rem;
+            border-radius: 1rem;
+            color: #ffe0e0;
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            backdrop-filter: blur(4px);
         }
 
-        .error-message::before {
-            content: '⚠️';
-            font-size: 1.2rem;
-        }
-
-        /* Table styling - keeping same structure but better visual */
+        /* table glass style */
         .info-table {
             width: 100%;
             border-collapse: collapse;
         }
 
         .info-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             transition: background 0.15s;
         }
 
         .info-table tr:hover {
-            background: #f8fafc;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .info-table td {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid #f1f5f9;
+            padding: 1rem 1.2rem;
         }
 
         .info-table td:first-child {
             font-weight: 700;
-            color: #1e293b;
-            width: 40%;
-            background: #fafcff;
+            color: #bfdbff;
+            width: 42%;
             font-size: 0.85rem;
             letter-spacing: 0.3px;
         }
 
         .info-table td:last-child {
-            color: #0f172a;
+            color: #f0f4fe;
             font-weight: 500;
             font-size: 0.9rem;
             word-break: break-word;
         }
 
-        .info-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Timezone chips */
-        .timezone-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
         .timezone-chip {
-            background: #e0e7ff;
-            color: #3730a3;
-            padding: 0.25rem 0.75rem;
+            background: rgba(72, 120, 200, 0.6);
+            backdrop-filter: blur(4px);
+            padding: 0.2rem 0.7rem;
             border-radius: 100px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin: 0.2rem 0.25rem;
+            border: 0.5px solid rgba(255,255,255,0.3);
+        }
+
+        .number-type-pill {
+            background: rgba(168, 85, 247, 0.5);
+            padding: 0.2rem 0.8rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
             font-weight: 600;
             display: inline-block;
         }
 
-        /* Footer */
-        .footer {
-            background: #f9fafb;
-            padding: 1rem;
+        .footer-note {
+            background: rgba(0, 0, 0, 0.3);
             text-align: center;
-            border-top: 1px solid #e5e7eb;
+            padding: 0.9rem;
             font-size: 0.7rem;
-            color: #64748b;
+            color: rgba(220, 240, 255, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Loading state */
-        button.loading {
-            pointer-events: none;
-            opacity: 0.8;
-        }
-
-        button.loading .btn-text {
-            display: inline-block;
-            animation: pulse 1.2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        /* Responsive */
         @media (max-width: 640px) {
             body {
                 padding: 1rem;
             }
-            
-            .header h1 {
+            .glass-header h1 {
                 font-size: 1.5rem;
-                flex-direction: column;
-                gap: 0.5rem;
             }
-            
-            .form-section,
-            .result-section {
+            .glass-form, .glass-result {
                 padding-left: 1rem;
                 padding-right: 1rem;
             }
-            
             .info-table td {
-                padding: 0.75rem 1rem;
-            }
-            
-            .info-table td:first-child {
-                width: 45%;
-                font-size: 0.75rem;
-            }
-            
-            .info-table td:last-child {
-                font-size: 0.8rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .info-table td {
+                padding: 0.8rem;
                 display: block;
                 width: 100%;
-                border-bottom: none;
             }
-            
             .info-table td:first-child {
                 width: 100%;
-                background: #f1f5f9;
-                padding-bottom: 0.25rem;
+                background: rgba(0,0,0,0.2);
+                padding-bottom: 0.2rem;
             }
-            
             .info-table td:last-child {
-                padding-top: 0.25rem;
-                margin-bottom: 0.5rem;
-                border-bottom: 1px solid #e2e8f0;
+                padding-top: 0.2rem;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
             }
-            
             .info-table tr:last-child td:last-child {
                 border-bottom: none;
             }
         }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <div class="main-card">
-            <div class="header">
-                <h1>
-                    📱 Phone Number Lookup
-                    <span>Global</span>
-                </h1>
-                <p>Validate & enrich phone numbers with carrier, location & timezone data</p>
-            </div>
 
-            <div class="form-section">
-                <form method="POST" id="lookupForm">
-                    <div class="input-group">
-                        <div class="input-label">
-                            <i>🌐</i> Enter number with country code
-                        </div>
-                        <div class="input-wrapper">
-                            <div class="country-code-hint">+</div>
-                            <input type="text" 
-                                   name="phone" 
-                                   id="phoneInput" 
-                                   placeholder="e.g., 14155552671 or 917654321098" 
-                                   value="{{ request.form.get('phone', '') if request.form else '' }}" 
-                                   required>
-                        </div>
-                    </div>
-                    <button type="submit" id="submitBtn">
-                        <span>🔍</span>
-                        <span class="btn-text">Lookup Number</span>
-                    </button>
-                </form>
-            </div>
+    <!-- particle canvas background -->
+    <canvas id="particleCanvas"></canvas>
 
-            {% if result %}
-            <div class="result-section">
-                <div class="result-card">
-                    <div class="result-header">
-                        {% if result.error %}
-                        <div class="invalid-badge">
-                            ⚠️ Error Occurred
+    <div class="glass-orb">
+        <div class="glass-header">
+            <h1>
+                📡 NexusLookup 
+                <span class="badge-glow">glassmorphic</span>
+            </h1>
+            <p>Global phone intelligence • carrier & geolocation • timezone insight</p>
+        </div>
+
+        <div class="glass-form">
+            <form method="POST" id="lookupForm">
+                <div class="input-label">
+                    ✨ ENTER NUMBER WITH COUNTRY CODE
+                </div>
+                <div class="input-wrapper">
+                    <div class="country-hint">+</div>
+                    <input type="text" name="phone" id="phoneInput" 
+                           placeholder="e.g., 14155552671  or  447911123456" 
+                           value="{{ request.form.get('phone', '') if request.form else '' }}" required>
+                </div>
+                <button type="submit" id="submitBtn">
+                    <span>🔮</span> Validate & Lookup
+                </button>
+            </form>
+        </div>
+
+        {% if result %}
+        <div class="glass-result">
+            <div class="result-card">
+                <div class="result-header">
+                    {% if result.error %}
+                        <span class="invalid-badge">⚠️ SYSTEM ERROR</span>
+                    {% elif not result.valid %}
+                        <span class="invalid-badge">❌ INVALID NUMBER</span>
+                    {% else %}
+                        <span class="valid-badge">✅ VALID ACTIVE NUMBER</span>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if result.error %}
+                        <div class="error-message">
+                            {{ result.error }}
                         </div>
-                        {% elif not result.valid %}
-                        <div class="invalid-badge">
-                            ❌ Invalid Phone Number
+                    {% elif not result.valid %}
+                        <div class="error-message">
+                            The number format is invalid or incomplete. Please provide full international number with country code (e.g., +1XXXXXXXXXX).
                         </div>
-                        {% else %}
-                        <div class="valid-badge">
-                            ✅ Valid Phone Number
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div style="padding: 0;">
-                        {% if result.error %}
-                        <div style="padding: 1.5rem;">
-                            <div class="error-message">
-                                {{ result.error }}
-                            </div>
-                        </div>
-                        {% elif not result.valid %}
-                        <div style="padding: 1.5rem;">
-                            <div class="error-message">
-                                The phone number you entered appears to be invalid. Please check the country code and number format.
-                            </div>
-                        </div>
-                        {% else %}
+                    {% else %}
                         <table class="info-table">
-                            <tr>
-                                <td>📍 Location</td>
-                                <td>{{ result.location }}</td>
-                            </tr>
-                            <tr>
-                                <td>📶 Carrier</td>
-                                <td>{{ result.carrier }}</td>
-                            </tr>
-                            <tr>
-                                <td>🌍 Region Code</td>
-                                <td>{{ result.region_code }}</td>
-                            </tr>
-                            <tr>
-                                <td>🔢 Country Code</td>
-                                <td>{{ result.country_code }}</td>
-                            </tr>
-                            <tr>
-                                <td>📞 National Number</td>
-                                <td>{{ result.national_number }}</td>
-                            </tr>
-                            <tr>
-                                <td>📋 E164 Format</td>
-                                <td><code style="background:#f1f5f9; padding:0.2rem 0.4rem; border-radius:0.3rem;">{{ result.e164 }}</code></td>
-                            </tr>
-                            <tr>
-                                <td>🌐 International Format</td>
-                                <td>{{ result.international }}</td>
-                            </tr>
-                            <tr>
-                                <td>🏠 National Format</td>
-                                <td>{{ result.national }}</td>
-                            </tr>
-                            <tr>
-                                <td>📱 Number Type</td>
-                                <td>
-                                    <span style="background:#e0e7ff; padding:0.2rem 0.6rem; border-radius:100px; font-size:0.75rem; font-weight:600;">
-                                        {{ result.number_type }}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>✅ Is Possible</td>
-                                <td>
-                                    {% if result.is_possible %}
-                                    <span style="color:#10b981; font-weight:700;">✓ Yes</span>
-                                    {% else %}
-                                    <span style="color:#ef4444; font-weight:700;">✗ No</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>🕐 Timezone(s)</td>
-                                <td>
-                                    <div class="timezone-list">
-                                        {% for tz in result.timezones %}
-                                        <span class="timezone-chip">{{ tz }}</span>
-                                        {% endfor %}
-                                    </div>
-                                </td>
-                            </tr>
+                            <tr><td>📍 Location</td><td>{{ result.location }}</td></tr>
+                            <tr><td>📶 Carrier / Operator</td><td>{{ result.carrier }}</td></tr>
+                            <tr><td>🌍 Region Code</td><td>{{ result.region_code }}</td></tr>
+                            <tr><td>🔢 Country Code</td><td>{{ result.country_code }}</td></tr>
+                            <tr><td>📞 National Number</td><td>{{ result.national_number }}</td></tr>
+                            <tr><td>📋 E164 Format</td><td><code style="background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:8px;">{{ result.e164 }}</code></td></tr>
+                            <tr><td>🌐 International Format</td><td>{{ result.international }}</td></tr>
+                            <tr><td>🏠 National Format</td><td>{{ result.national }}</td></tr>
+                            <tr><td>📱 Number Type</td><td><span class="number-type-pill">{{ result.number_type }}</span></td></tr>
+                            <tr><td>✅ Is Possible</td><td>{% if result.is_possible %}✔️ Yes (valid pattern){% else %}❌ No (unlikely){% endif %}</td></tr>
+                            <tr><td>🕐 Timezone(s)</td><td><div class="timezone-list">{% for tz in result.timezones %}<span class="timezone-chip">{{ tz }}</span>{% endfor %}</div></td></tr>
                         </table>
-                        {% endif %}
-                    </div>
+                    {% endif %}
                 </div>
             </div>
-            {% endif %}
-            
-            <div class="footer">
-                🔒 Secure validation • Uses global number database • Privacy protected
-            </div>
+        </div>
+        {% endif %}
+        <div class="footer-note">
+            🌊 glassmorphic UI · real-time particle field · privacy-first validation
         </div>
     </div>
 
     <script>
-        // Simple UI enhancement: loading state on form submit
-        const form = document.getElementById('lookupForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const phoneInput = document.getElementById('phoneInput');
+        // ========== INTERACTIVE PARTICLE BACKGROUND ==========
+        const canvas = document.getElementById('particleCanvas');
+        let ctx = canvas.getContext('2d');
+        let width = window.innerWidth;
+        let height = window.innerHeight;
         
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                const phoneValue = phoneInput.value.trim();
-                if (!phoneValue) {
+        let particles = [];
+        const PARTICLE_COUNT = 140;
+        let mouseX = null, mouseY = null;
+        let hueBase = 210; // cool blue tint
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 2.5 + 1.2;
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+                this.alpha = Math.random() * 0.5 + 0.2;
+                this.color = `hsla(${hueBase + Math.random() * 30}, 75%, 65%, ${this.alpha})`;
+                this.waveOffset = Math.random() * Math.PI * 2;
+            }
+            
+            update() {
+                // gentle sine wave drift + mouse repulsion
+                let dx = 0, dy = 0;
+                if (mouseX !== null && mouseY !== null) {
+                    let distX = this.x - mouseX;
+                    let distY = this.y - mouseY;
+                    let dist = Math.sqrt(distX * distX + distY * distY);
+                    if (dist < 120) {
+                        let force = (120 - dist) / 120;
+                        dx += (distX / dist) * force * 1.2;
+                        dy += (distY / dist) * force * 1.2;
+                    }
+                }
+                // wave effect for smooth motion
+                this.speedX += (Math.sin(Date.now() * 0.001 + this.waveOffset) * 0.005) + dx * 0.03;
+                this.speedY += (Math.cos(Date.now() * 0.0008 + this.waveOffset) * 0.005) + dy * 0.03;
+                
+                // limit speed
+                let maxSpeed = 0.9;
+                this.speedX = Math.min(maxSpeed, Math.max(-maxSpeed, this.speedX));
+                this.speedY = Math.min(maxSpeed, Math.max(-maxSpeed, this.speedY));
+                
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                // wrap around edges with smooth respawn
+                if (this.x < -20) this.x = width + 20;
+                if (this.x > width + 20) this.x = -20;
+                if (this.y < -20) this.y = height + 20;
+                if (this.y > height + 20) this.y = -20;
+                
+                // dynamic color shifting based on position
+                let newHue = (hueBase + (this.x * 0.05) % 30 + (this.y * 0.03) % 20) % 360;
+                this.color = `hsla(${newHue}, 80%, 68%, ${this.alpha * 0.8})`;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                // soft glow
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = "rgba(100, 180, 255, 0.6)";
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 110) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        let opacity = (1 - distance / 110) * 0.2;
+                        ctx.strokeStyle = `rgba(140, 200, 255, ${opacity * 0.7})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        let starryLayer = [];
+
+        function initStars() {
+            for (let i = 0; i < 200; i++) {
+                starryLayer.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.2,
+                    alpha: Math.random() * 0.5 + 0.2,
+                });
+            }
+        }
+
+        function drawStars() {
+            for (let s of starryLayer) {
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 240, 200, ${s.alpha * 0.5})`;
+                ctx.fill();
+            }
+        }
+
+        function animateBackground() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, width, height);
+            // radial gradient background for extra depth
+            let grad = ctx.createRadialGradient(width * 0.5, height * 0.6, 80, width * 0.5, height * 0.6, width * 0.7);
+            grad.addColorStop(0, '#0a0f2a');
+            grad.addColorStop(1, '#030b1a');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+            
+            // draw tiny stars
+            drawStars();
+            
+            // update and draw particles
+            for (let p of particles) {
+                p.update();
+                p.draw();
+            }
+            drawConnections();
+            
+            requestAnimationFrame(animateBackground);
+        }
+
+        function handleMouseMove(e) {
+            let rect = canvas.getBoundingClientRect();
+            let scaleX = canvas.width / rect.width;
+            let scaleY = canvas.height / rect.height;
+            mouseX = (e.clientX - rect.left) * scaleX;
+            mouseY = (e.clientY - rect.top) * scaleY;
+        }
+        
+        function handleMouseLeave() {
+            mouseX = null;
+            mouseY = null;
+        }
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles();
+            starryLayer.length = 0;
+            initStars();
+        });
+        
+        resizeCanvas();
+        initParticles();
+        initStars();
+        animateBackground();
+        
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseleave', handleMouseLeave);
+        
+        // ========== FORM LOADING GLASS EFFECT ==========
+        const formElem = document.getElementById('lookupForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const phoneInputElem = document.getElementById('phoneInput');
+        
+        if (formElem) {
+            formElem.addEventListener('submit', function(e) {
+                let phoneVal = phoneInputElem.value.trim();
+                if (!phoneVal) {
                     e.preventDefault();
-                    alert('📞 Please enter a phone number with country code');
+                    alert('📞 Please enter a phone number with country code (starting with +)');
                     return;
                 }
-                
-                // Add loading visual feedback
-                submitBtn.classList.add('loading');
-                const originalHTML = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<span>⏳</span><span class="btn-text">Looking up...</span>';
-                
-                // Note: form will submit normally, this is just visual feedback
-                // The page will reload with results
+                if (!phoneVal.includes('+') && phoneVal.length > 2) {
+                    if (!confirm('⚠️ The number should include country code like +44 or +1. Continue anyway?')) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                submitBtn.classList.add('loading-effect');
+                submitBtn.innerHTML = '<span>🌀</span> Validating...';
+                submitBtn.style.opacity = '0.9';
+                // form will submit naturally, but ui freezes just for style
             });
         }
         
-        // Optional: Auto-format input to add + if missing? but we respect original logic
-        phoneInput?.addEventListener('input', function(e) {
-            // Just a nice UX hint - doesn't modify backend behavior
-            let value = this.value;
-            if (value && !value.startsWith('+') && value.length > 0) {
-                // Show subtle hint but don't auto-add to avoid confusion with backend validation
-                this.style.borderColor = '#cbd5e1';
-            }
-        });
-        
-        // Add focus effect
-        const wrapper = document.querySelector('.input-wrapper');
-        if (wrapper) {
-            phoneInput?.addEventListener('focus', () => {
-                wrapper.style.borderColor = '#667eea';
-                wrapper.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)';
+        // additional subtle glow for input
+        const wrapperDiv = document.querySelector('.input-wrapper');
+        if (phoneInputElem && wrapperDiv) {
+            phoneInputElem.addEventListener('focus', () => {
+                wrapperDiv.style.borderColor = 'rgba(120, 180, 255, 0.9)';
+                wrapperDiv.style.boxShadow = '0 0 0 3px rgba(70, 130, 255, 0.4)';
             });
-            phoneInput?.addEventListener('blur', () => {
-                wrapper.style.borderColor = '#e2e8f0';
-                wrapper.style.boxShadow = 'none';
+            phoneInputElem.addEventListener('blur', () => {
+                wrapperDiv.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                wrapperDiv.style.boxShadow = 'none';
             });
         }
     </script>
 </body>
-
 </html>
