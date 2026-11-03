@@ -3,643 +3,1522 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Mocosn · Glassmorphic Phone Validator</title>
+    <title>Mocosn · Telephony &amp; LeakOSINT Intelligence</title>
+    
+    <!-- Google Fonts: Cormorant Garamond (Editorial Serif for Logo) + Plus Jakarta Sans + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-ui: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            --lime-accent: #a3e635;
+            --lime-dark: #1a2e05;
+            --purple-deep: #281736;
+            --purple-soft: #8b6fa3;
+            --ochre-accent: #d98236;
+            --frosted-bg: rgba(255, 255, 255, 0.22);
+            --frosted-border: rgba(255, 255, 255, 0.6);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* ========= PARTICLE CANVAS (fullscreen background) ========= */
-        #particleCanvas {
+        body {
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            background: #473950;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 1.8rem 1.4rem 4rem;
+            position: relative;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient blurred depth-of-field background */
+        .ambient-glow {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 0;
-            display: block;
-            background: radial-gradient(circle at 20% 30%, #0a0f2a, #030614);
-            pointer-events: none;  /* allows clicking through canvas */
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at 15% 20%, rgba(186, 154, 204, 0.45) 0%, transparent 45%),
+                radial-gradient(circle at 85% 30%, rgba(217, 130, 54, 0.35) 0%, transparent 50%),
+                radial-gradient(circle at 50% 85%, rgba(139, 111, 163, 0.5) 0%, rgba(40, 23, 54, 0.95) 75%);
+            filter: blur(50px);
+            transform: scale(1.1);
         }
 
-        body {
-            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
-            min-height: 100vh;
-            padding: 2rem 1.5rem;
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* glassmorphic main container */
-        .glass-orb {
-            max-width: 860px;
+        /* Top Outer Meta Bar (outside the framed card, matching screenshot) */
+        .outer-meta-bar {
             width: 100%;
-            margin: 0 auto;
-            background: rgba(15, 25, 45, 0.45);
-            backdrop-filter: blur(14px) saturate(180%);
-            -webkit-backdrop-filter: blur(14px);
-            border-radius: 3rem;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        /* inner frosted layers for depth */
-        .glass-header {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(4px);
-            padding: 2rem 2rem 1.6rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .glass-header h1 {
-            font-size: 2.1rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #FFFFFF, #c0e0ff, #aad0ff);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            letter-spacing: -0.3px;
+            max-width: 1120px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .badge-glow {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(4px);
-            padding: 0.25rem 0.9rem;
-            border-radius: 60px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: white;
-            border: 0.5px solid rgba(255,255,240,0.4);
-        }
-
-        .glass-header p {
+            justify-content: space-between;
+            padding: 0.2rem 0.6rem 1.2rem;
+            z-index: 10;
+            font-size: 0.85rem;
             color: rgba(255, 255, 255, 0.75);
-            margin-top: 0.7rem;
-            font-size: 0.9rem;
-            font-weight: 400;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        /* form area */
-        .glass-form {
-            padding: 2rem 2rem 1rem 2rem;
-            background: rgba(10, 18, 28, 0.3);
-        }
-
-        .input-label {
+        .meta-studio {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 0.6rem;
-        }
-
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            background: rgba(20, 30, 45, 0.6);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 1.5rem;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .input-wrapper:focus-within {
-            border-color: rgba(120, 180, 255, 0.8);
-            background: rgba(25, 40, 60, 0.7);
-            box-shadow: 0 0 0 4px rgba(100, 150, 255, 0.2);
-        }
-
-        .country-hint {
-            padding: 0 0 0 1.2rem;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #bbd9ff;
-            border-right: 1px solid rgba(255,255,255,0.2);
-            margin-right: 0.5rem;
-            background: rgba(0,0,0,0.2);
-            height: 100%;
-            border-radius: 1.5rem 0 0 1.5rem;
-            display: flex;
-            align-items: center;
-        }
-
-        input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 1rem 1rem 1rem 0.5rem;
-            font-size: 1rem;
             font-weight: 500;
-            color: white;
-            outline: none;
-            font-family: 'Inter', monospace;
+            letter-spacing: -0.2px;
         }
 
-        input::placeholder {
-            color: rgba(200, 215, 240, 0.5);
-            font-weight: 400;
-            font-family: 'Inter', sans-serif;
+        .meta-studio-icon {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
         }
 
-        button {
-            margin-top: 1.8rem;
+        .meta-pills {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meta-pill {
+            background: rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 0.3rem 0.95rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+        }
+
+        /* ================= THE MAIN FRAMED CARD ================= */
+        .bloom-frame {
             width: 100%;
-            padding: 0.9rem;
-            background: rgba(100, 150, 255, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
+            max-width: 1120px;
+            border: 4.5px solid rgba(255, 255, 255, 0.95);
+            border-radius: 36px;
+            box-shadow: 
+                0 40px 100px rgba(25, 12, 38, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.35);
+            position: relative;
+            z-index: 5;
+            overflow: hidden;
+            background: #b5a8bc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Surreal Landscape SVG Background inside the frame */
+        .landscape-scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .landscape-svg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            min-height: 550px;
+            height: 65%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Top atmospheric haze overlay */
+        .haze-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, 
+                rgba(191, 179, 198, 0.92) 0%, 
+                rgba(200, 189, 203, 0.75) 30%, 
+                rgba(215, 204, 218, 0.3) 60%, 
+                rgba(77, 44, 96, 0.45) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Content Container over the landscape */
+        .frame-content {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            min-height: 580px;
+        }
+
+        /* ================= NAVBAR INSIDE THE CARD ================= */
+        .inner-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.8rem 2.5rem 1rem;
+            width: 100%;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
             font-weight: 700;
-            font-size: 1rem;
-            border-radius: 2rem;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-item {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.88rem;
+            font-weight: 500;
+            text-decoration: none;
             cursor: pointer;
-            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+        }
+
+        .nav-item .caret {
+            font-size: 0.65rem;
+            opacity: 0.8;
+        }
+
+        .nav-consultation-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            padding: 0.65rem 1.4rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ffffff;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-consultation-btn:hover {
+            background: rgba(255, 255, 255, 0.32);
+            border-color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* ================= HERO SECTION ================= */
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 3rem 2rem 2.5rem;
+            position: relative;
+        }
+
+        .hero-headline {
+            font-size: 3.4rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1.2px;
+            color: #ffffff;
+            max-width: 720px;
+            margin-bottom: 1.1rem;
+            text-shadow: 0 4px 25px rgba(50, 30, 65, 0.35);
+        }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.92);
+            max-width: 580px;
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 12px rgba(40, 20, 50, 0.3);
+        }
+
+        /* ================= FLOATING SEARCH CAPSULE ================= */
+        .search-capsule-wrap {
+            width: 100%;
+            max-width: 620px;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-capsule {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border-radius: 100px;
+            padding: 6px 8px 6px 10px;
+            box-shadow: 
+                0 20px 50px rgba(35, 15, 50, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.8);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-capsule:focus-within {
+            box-shadow: 
+                0 25px 60px rgba(35, 15, 50, 0.4),
+                0 0 0 4px rgba(163, 230, 53, 0.45);
+            transform: translateY(-1px);
+        }
+
+        /* Signature Lime Circular Badge on Left */
+        .capsule-badge {
+            width: 42px;
+            height: 42px;
+            background: var(--lime-accent);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            letter-spacing: 0.3px;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+            color: var(--lime-dark);
+            font-size: 1.15rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(163, 230, 53, 0.4);
+            user-select: none;
         }
 
-        button:hover {
-            background: rgba(80, 130, 255, 0.95);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(0, 30, 100, 0.4);
-            border-color: rgba(255, 255, 255, 0.5);
+        .capsule-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-family: var(--font-ui);
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1a1622;
+            padding: 0.8rem 1rem;
+            outline: none;
         }
 
-        button:active {
+        .capsule-input::placeholder {
+            color: #8c8294;
+            font-weight: 400;
+        }
+
+        .capsule-btn {
+            background: #1e1927;
+            border: none;
+            color: #ffffff;
+            font-family: var(--font-ui);
+            font-size: 0.92rem;
+            font-weight: 700;
+            padding: 0.75rem 1.6rem;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .capsule-btn:hover {
+            background: #2e263d;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .capsule-btn:active {
             transform: translateY(1px);
         }
 
-        /* result glass card */
-        .glass-result {
-            padding: 0 2rem 2rem 2rem;
-        }
-
-        .result-card {
-            background: rgba(12, 22, 35, 0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 1.8rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            overflow: hidden;
-            transition: all 0.2s;
-        }
-
-        .result-header {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.9rem 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        /* Mode Switcher Chips */
+        .mode-row {
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 1.2rem;
             flex-wrap: wrap;
         }
 
-        .valid-badge {
-            background: rgba(34, 197, 94, 0.85);
-            backdrop-filter: blur(4px);
-            padding: 0.3rem 1.2rem;
-            border-radius: 40px;
-            font-size: 0.75rem;
+        .mode-pill {
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+            padding: 0.45rem 1.1rem;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .mode-pill:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .mode-pill.active {
+            background: #ffffff;
+            color: #1a1622;
             font-weight: 700;
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: 0.5px solid rgba(255,255,200,0.5);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            border-color: #ffffff;
         }
 
-        .invalid-badge {
-            background: rgba(239, 68, 68, 0.85);
-            backdrop-filter: blur(4px);
-            padding: 0.3rem 1.2rem;
-            border-radius: 40px;
+        /* Instant Sample Chips */
+        .chips-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.85);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .sample-pill {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            padding: 0.2rem 0.65rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
             font-size: 0.75rem;
-            font-weight: 700;
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
         }
 
-        .error-message {
-            background: rgba(153, 27, 27, 0.25);
-            border-left: 4px solid #ff7b7b;
-            padding: 1rem 1.2rem;
-            margin: 1rem;
-            border-radius: 1rem;
-            color: #ffe0e0;
-            font-weight: 500;
-            backdrop-filter: blur(4px);
+        .sample-pill:hover {
+            background: #ffffff;
+            color: #1a1622;
         }
 
-        /* table glass style */
-        .info-table {
+        /* ================= SETTINGS DRAWER ================= */
+        .settings-card {
+            display: none;
             width: 100%;
-            border-collapse: collapse;
+            max-width: 620px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1.5px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            padding: 1.4rem;
+            margin-top: 1rem;
+            text-align: left;
+            animation: fadeInDown 0.25s ease;
+            box-shadow: 0 15px 35px rgba(30, 15, 45, 0.2);
         }
 
-        .info-table tr {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            transition: background 0.15s;
+        .settings-card.open {
+            display: block;
         }
 
-        .info-table tr:hover {
-            background: rgba(255, 255, 255, 0.05);
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .info-table td {
-            padding: 1rem 1.2rem;
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 1rem;
         }
 
-        .info-table td:first-child {
+        .setting-col {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .setting-label {
+            font-size: 0.72rem;
             font-weight: 700;
-            color: #bfdbff;
-            width: 42%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .setting-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
             font-size: 0.85rem;
-            letter-spacing: 0.3px;
+            color: #1a1622;
+            font-family: inherit;
+            outline: none;
         }
 
-        .info-table td:last-child {
-            color: #f0f4fe;
-            font-weight: 500;
-            font-size: 0.9rem;
-            word-break: break-word;
+        .setting-input:focus {
+            background: #ffffff;
+            box-shadow: 0 0 0 2px var(--lime-accent);
         }
 
-        .timezone-chip {
-            background: rgba(72, 120, 200, 0.6);
-            backdrop-filter: blur(4px);
+        /* Real-Time Formula Pill */
+        .formula-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .formula-cost-pill {
+            background: var(--lime-accent);
+            color: var(--lime-dark);
+            padding: 0.15rem 0.6rem;
+            border-radius: 100px;
+            font-weight: 800;
+            font-family: var(--font-mono);
+        }
+
+        /* ================= RESULTS SECTION (FROSTED GLASS) ================= */
+        .results-wrapper {
+            padding: 1.5rem 2.5rem 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .results-glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(30, 15, 45, 0.3);
+            color: #ffffff;
+        }
+
+        .res-header {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 1.2rem 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .res-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .res-badge {
+            background: rgba(255, 255, 255, 0.85);
+            color: #1a1622;
+            padding: 0.35rem 1rem;
+            border-radius: 100px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .res-badge.alert {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        .res-badge.success {
+            background: var(--lime-accent);
+            color: var(--lime-dark);
+        }
+
+        /* Bento Grid for Telemetry */
+        .bento-grid {
+            padding: 1.8rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+        }
+
+        .bento-card {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 18px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .bento-card:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #ffffff;
+        }
+
+        .bento-lbl {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bento-val {
+            font-size: 1.15rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            word-break: break-all;
+        }
+
+        .bento-val.mono {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+        }
+
+        .copy-btn-mini {
+            background: #ffffff;
+            border: none;
+            color: #1a1622;
+            padding: 0.25rem 0.7rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            margin-left: auto;
+            transition: all 0.15s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .copy-btn-mini:hover {
+            background: var(--lime-accent);
+            transform: scale(1.05);
+        }
+
+        /* LeakOSINT Results Section */
+        .leak-toolbar {
+            padding: 1rem 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .leak-filter {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 100px;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+            color: #1a1622;
+            outline: none;
+            min-width: 240px;
+        }
+
+        .leak-export-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-export {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #ffffff;
+            padding: 0.45rem 1rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-export:hover {
+            background: #ffffff;
+            color: #1a1622;
+        }
+
+        /* Database Feed */
+        .db-feed-list {
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+        }
+
+        .db-card-panel {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .db-card-head {
+            background: rgba(0, 0, 0, 0.12);
+            padding: 1rem 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .db-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        .db-count {
+            background: var(--lime-accent);
+            color: var(--lime-dark);
             padding: 0.2rem 0.7rem;
             border-radius: 100px;
-            font-size: 0.7rem;
-            display: inline-block;
-            margin: 0.2rem 0.25rem;
-            border: 0.5px solid rgba(255,255,255,0.3);
+            font-size: 0.75rem;
+            font-weight: 800;
         }
 
-        .number-type-pill {
-            background: rgba(168, 85, 247, 0.5);
-            padding: 0.2rem 0.8rem;
+        .db-infoleak {
+            background: rgba(217, 130, 54, 0.25);
+            border-left: 4px solid var(--ochre-accent);
+            padding: 0.85rem 1.2rem;
+            margin: 1rem 1.4rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #fef08a;
+            line-height: 1.5;
+        }
+
+        .records-container {
+            padding: 1rem 1.4rem 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .record-card-box {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
+            padding: 1rem 1.2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px 16px;
+        }
+
+        .rec-field-pair {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .rec-field-key {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .rec-field-val {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+        }
+
+        .rec-field-val.highlight {
+            color: #fde047;
+            font-weight: 700;
+        }
+
+        .rec-copy-icon {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 2px;
+            font-size: 0.8rem;
+        }
+
+        .rec-copy-icon:hover {
+            color: #ffffff;
+        }
+
+        /* Floating Toast */
+        #bloomToast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #ffffff;
+            color: #1a1622;
+            padding: 0.8rem 1.5rem;
             border-radius: 100px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            display: inline-block;
+            font-size: 0.88rem;
+            font-weight: 700;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 9999;
+            animation: popUp 0.2s ease;
         }
 
-        .footer-note {
-            background: rgba(0, 0, 0, 0.3);
-            text-align: center;
-            padding: 0.9rem;
-            font-size: 0.7rem;
-            color: rgba(220, 240, 255, 0.6);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        @keyframes popUp {
+            from { transform: translateY(12px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        @media (max-width: 640px) {
-            body {
-                padding: 1rem;
-            }
-            .glass-header h1 {
-                font-size: 1.5rem;
-            }
-            .glass-form, .glass-result {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-            .info-table td {
-                padding: 0.8rem;
-                display: block;
-                width: 100%;
-            }
-            .info-table td:first-child {
-                width: 100%;
-                background: rgba(0,0,0,0.2);
-                padding-bottom: 0.2rem;
-            }
-            .info-table td:last-child {
-                padding-top: 0.2rem;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-            }
-            .info-table tr:last-child td:last-child {
-                border-bottom: none;
-            }
+        @media (max-width: 768px) {
+            body { padding: 1rem 0.8rem 3rem; }
+            .bloom-frame { border-radius: 24px; border-width: 3.5px; }
+            .inner-nav { padding: 1.4rem 1.4rem 0.5rem; }
+            .nav-links { display: none; }
+            .hero-headline { font-size: 2.2rem; }
+            .hero-section { padding: 2rem 1.2rem; }
+            .search-capsule { flex-direction: column; border-radius: 24px; padding: 12px; gap: 8px; }
+            .capsule-input { width: 100%; text-align: center; }
+            .capsule-btn { width: 100%; justify-content: center; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .results-wrapper { padding: 1rem 1.2rem 2rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- particle canvas background -->
-    <canvas id="particleCanvas"></canvas>
+    <!-- Ambient blurred aura matching the landscape -->
+    <div class="ambient-glow"></div>
 
-    <div class="glass-orb">
-        <div class="glass-header">
-            <h1>
-                📡 Mocosn 
-                <span class="badge-glow">glassmorphic</span>
-            </h1>
-            <p>Global phone intelligence • carrier & geolocation • timezone insight</p>
+    <!-- Outer Meta Bar (outside the framed window, matching screenshot) -->
+    <div class="outer-meta-bar">
+        <div class="meta-studio">
+            <span class="meta-studio-icon">✳</span>
+            <span>Mocosn by Phenomenon Studio</span>
         </div>
-
-        <div class="glass-form">
-            <form method="POST" id="lookupForm">
-                <div class="input-label">
-                    ✨ ENTER NUMBER WITH COUNTRY CODE
-                </div>
-                <div class="input-wrapper">
-                    <div class="country-hint">+</div>
-                    <input type="text" name="phone" id="phoneInput" 
-                           placeholder="e.g., 14155552671  or  447911123456" 
-                           value="{{ request.form.get('phone', '') if request.form else '' }}" required>
-                </div>
-                <button type="submit" id="submitBtn">
-                    <span>🔮</span> Validate & Lookup
-                </button>
-            </form>
-        </div>
-
-        {% if result %}
-        <div class="glass-result">
-            <div class="result-card">
-                <div class="result-header">
-                    {% if result.error %}
-                        <span class="invalid-badge">⚠️ SYSTEM ERROR</span>
-                    {% elif not result.valid %}
-                        <span class="invalid-badge">❌ INVALID NUMBER</span>
-                    {% else %}
-                        <span class="valid-badge">✅ VALID ACTIVE NUMBER</span>
-                    {% endif %}
-                </div>
-                <div>
-                    {% if result.error %}
-                        <div class="error-message">
-                            {{ result.error }}
-                        </div>
-                    {% elif not result.valid %}
-                        <div class="error-message">
-                            The number format is invalid or incomplete. Please provide full international number with country code (e.g., +1XXXXXXXXXX).
-                        </div>
-                    {% else %}
-                        <table class="info-table">
-                            <tr><td>📍 Location</td><td>{{ result.location }}</td></tr>
-                            <tr><td>📶 Carrier / Operator</td><td>{{ result.carrier }}</td></tr>
-                            <tr><td>🌍 Region Code</td><td>{{ result.region_code }}</td></tr>
-                            <tr><td>🔢 Country Code</td><td>{{ result.country_code }}</td></tr>
-                            <tr><td>📞 National Number</td><td>{{ result.national_number }}</td></tr>
-                            <tr><td>📋 E164 Format</td><td><code style="background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:8px;">{{ result.e164 }}</code></td></tr>
-                            <tr><td>🌐 International Format</td><td>{{ result.international }}</td></tr>
-                            <tr><td>🏠 National Format</td><td>{{ result.national }}</td></tr>
-                            <tr><td>📱 Number Type</td><td><span class="number-type-pill">{{ result.number_type }}</span></td></tr>
-                            <tr><td>✅ Is Possible</td><td>{% if result.is_possible %}✔️ Yes (valid pattern){% else %}❌ No (unlikely){% endif %}</td></tr>
-                            <tr><td>🕐 Timezone(s)</td><td><div class="timezone-list">{% for tz in result.timezones %}<span class="timezone-chip">{{ tz }}</span>{% endfor %}</div></td></tr>
-                        </table>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        <div class="footer-note">
-            🌊 glassmorphic UI · real-time particle field · privacy-first validation
+        <div class="meta-pills">
+            <span class="meta-pill">Telephony</span>
+            <span class="meta-pill">LeakOSINT</span>
         </div>
     </div>
 
+    <!-- ================= THE MAIN FRAMED DISPLAY CARD ================= -->
+    <div class="bloom-frame">
+
+        <!-- Surreal 3D Landscape SVG Scene Background -->
+        <div class="landscape-scene">
+            <svg class="landscape-svg" viewBox="0 0 1440 680" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#bfb3c6"/>
+                        <stop offset="45%" stop-color="#c8bdcb"/>
+                        <stop offset="75%" stop-color="#ded4df"/>
+                        <stop offset="100%" stop-color="#e9e0eb"/>
+                    </linearGradient>
+                    <linearGradient id="mountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#9a8c9e" stop-opacity="0.65"/>
+                        <stop offset="100%" stop-color="#b4a7b7" stop-opacity="0.95"/>
+                    </linearGradient>
+                    <linearGradient id="farHillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#89709a"/>
+                        <stop offset="100%" stop-color="#6e577d"/>
+                    </linearGradient>
+                    <linearGradient id="ochreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#d68234"/>
+                        <stop offset="50%" stop-color="#e59847"/>
+                        <stop offset="100%" stop-color="#bf6c22"/>
+                    </linearGradient>
+                    <linearGradient id="mossMidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#9d7ab6"/>
+                        <stop offset="50%" stop-color="#7d5996"/>
+                        <stop offset="100%" stop-color="#5a3b72"/>
+                    </linearGradient>
+                    <linearGradient id="riverGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%" stop-color="#8f8194"/>
+                        <stop offset="40%" stop-color="#a89cac"/>
+                        <stop offset="80%" stop-color="#c1b6c4"/>
+                        <stop offset="100%" stop-color="#ded4e0"/>
+                    </linearGradient>
+                    <linearGradient id="foreLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#956ea8"/>
+                        <stop offset="60%" stop-color="#724887"/>
+                        <stop offset="100%" stop-color="#4d2c60"/>
+                    </linearGradient>
+                    <linearGradient id="foreRightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#c26d2e"/>
+                        <stop offset="35%" stop-color="#835794"/>
+                        <stop offset="100%" stop-color="#4e2c60"/>
+                    </linearGradient>
+                    <linearGradient id="treeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#df82a7"/>
+                        <stop offset="60%" stop-color="#b5587f"/>
+                        <stop offset="100%" stop-color="#7e3253"/>
+                    </linearGradient>
+                </defs>
+
+                <!-- Distant Mountains -->
+                <path d="M0 320 Q 220 260, 480 290 T 960 280 T 1440 310 L 1440 680 L 0 680 Z" fill="url(#mountainGrad)"/>
+
+                <!-- Far Lavender Undulations -->
+                <path d="M0 360 Q 350 310, 700 350 T 1440 340 L 1440 680 L 0 680 Z" fill="url(#farHillGrad)"/>
+
+                <!-- Midground Hills with River Channel -->
+                <path d="M0 400 Q 280 350, 560 390 T 1100 380 Q 1300 350, 1440 370 L 1440 680 L 0 680 Z" fill="url(#mossMidGrad)"/>
+
+                <!-- Ochre Ridges on Midground -->
+                <path d="M80 410 Q 240 375, 420 400 Q 300 415, 80 410 Z" fill="url(#ochreGrad)" opacity="0.9"/>
+                <path d="M800 385 Q 960 365, 1150 390 Q 1000 405, 800 385 Z" fill="url(#ochreGrad)" opacity="0.85"/>
+
+                <!-- Winding Stream / River -->
+                <path d="M 680 370 Q 660 400, 640 430 Q 610 470, 630 510 Q 660 560, 560 680 L 460 680 Q 550 570, 520 520 Q 500 480, 540 440 Q 570 400, 610 370 Z" fill="url(#riverGrad)"/>
+
+                <!-- Foreground Left Lavender/Ochre Rolling Moss Hill -->
+                <path d="M0 440 Q 200 400, 450 480 Q 530 520, 500 680 L 0 680 Z" fill="url(#foreLeftGrad)"/>
+                <path d="M 40 465 Q 180 420, 320 460 Q 220 490, 40 465 Z" fill="url(#ochreGrad)"/>
+                <path d="M 120 510 Q 280 480, 420 540 Q 300 570, 120 510 Z" fill="url(#ochreGrad)" opacity="0.9"/>
+
+                <!-- Foreground Right Valley Hill with Ochre Moss -->
+                <path d="M 600 680 Q 720 520, 950 480 Q 1200 440, 1440 470 L 1440 680 Z" fill="url(#foreRightGrad)"/>
+                <path d="M 780 560 Q 980 485, 1280 460 Q 1120 515, 780 560 Z" fill="url(#ochreGrad)" opacity="0.95"/>
+                <path d="M 880 610 Q 1080 550, 1380 510 Q 1200 580, 880 610 Z" fill="url(#ochreGrad)" opacity="0.9"/>
+
+                <!-- Stylized Pink Blossom Trees on Right Slope -->
+                <ellipse cx="1200" cy="430" rx="45" ry="35" fill="url(#treeGrad)"/>
+                <ellipse cx="1250" cy="415" rx="55" ry="42" fill="url(#treeGrad)"/>
+                <ellipse cx="1310" cy="425" rx="50" ry="38" fill="url(#treeGrad)"/>
+                <ellipse cx="1370" cy="410" rx="60" ry="45" fill="url(#treeGrad)"/>
+                <ellipse cx="1420" cy="420" rx="45" ry="35" fill="url(#treeGrad)"/>
+                <ellipse cx="1160" cy="450" rx="35" ry="28" fill="url(#treeGrad)" opacity="0.85"/>
+                <ellipse cx="1280" cy="460" rx="40" ry="30" fill="url(#treeGrad)" opacity="0.9"/>
+            </svg>
+        </div>
+
+        <!-- Atmospheric haze blend -->
+        <div class="haze-overlay"></div>
+
+        <!-- Inner Content (Navbar + Hero + Search + Results) -->
+        <div class="frame-content">
+
+            <!-- Navbar -->
+            <nav class="inner-nav">
+                <a href="/" class="nav-logo">Mocosn</a>
+                
+                <ul class="nav-links">
+                    <li><a href="#" class="nav-item" onclick="setModeAndFocus('smart')">Services <span class="caret">▾</span></a></li>
+                    <li><a href="#" class="nav-item" onclick="setModeAndFocus('phone')">Resources <span class="caret">▾</span></a></li>
+                    <li><a href="#" class="nav-item" onclick="setModeAndFocus('leak')">About Us <span class="caret">▾</span></a></li>
+                    <li><a href="#resultsSec" class="nav-item">FAQ</a></li>
+                    <li><a href="#" class="nav-item" onclick="toggleSettingsDrawer()">Contacts</a></li>
+                </ul>
+
+                <button type="button" class="nav-consultation-btn" onclick="toggleSettingsDrawer()">
+                    <span>API Settings ⚙️</span>
+                </button>
+            </nav>
+
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <h1 class="hero-headline">
+                    Grow through<br>what you go through
+                </h1>
+                <p class="hero-subtitle">
+                    A modern telephony intelligence and OSINT matrix that uncovers deep carrier routing, geolocation, and real-time breached databases.
+                </p>
+
+                <!-- Mode Switcher Pills -->
+                <div class="mode-row">
+                    <div class="mode-pill {% if mode == 'smart' or not mode %}active{% endif %}" onclick="selectSearchMode('smart')" id="pillSmart">
+                        ⚡ OmniSearch
+                    </div>
+                    <div class="mode-pill {% if mode == 'phone' %}active{% endif %}" onclick="selectSearchMode('phone')" id="pillPhone">
+                        📱 Phone Telemetry
+                    </div>
+                    <div class="mode-pill {% if mode == 'leak' %}active{% endif %}" onclick="selectSearchMode('leak')" id="pillLeak">
+                        🛡️ LeakOSINT Matrix
+                    </div>
+                </div>
+
+                <!-- Floating Search Capsule Form (Exact visual of the lime badge pill) -->
+                <form method="POST" id="searchForm" class="search-capsule-wrap">
+                    <input type="hidden" name="mode" id="modeInput" value="{{ mode or 'smart' }}">
+
+                    <div class="search-capsule">
+                        <!-- Signature Lime Circle Badge -->
+                        <div class="capsule-badge" id="capsuleBadgeIcon">
+                            <span>🔍</span>
+                        </div>
+                        
+                        <input type="text" name="query" id="queryInput" class="capsule-input" 
+                               placeholder="Enter phone (+14155552671), email, or name..." 
+                               value="{{ query_value }}" required autocomplete="off" autofocus>
+                        
+                        <button type="submit" class="capsule-btn" id="submitBtn">
+                            <span>Scan Matrix</span> <span>→</span>
+                        </button>
+                    </div>
+
+                    <!-- Instant Query Samples -->
+                    <div class="chips-row" style="margin-top:0.9rem;">
+                        <span>Try instantly:</span>
+                        <span class="sample-pill" onclick="quickFill('+14155552671', 'smart')">+14155552671</span>
+                        <span class="sample-pill" onclick="quickFill('+447911123456', 'phone')">+447911123456</span>
+                        <span class="sample-pill" onclick="quickFill('elon@x.com', 'leak')">elon@x.com</span>
+                        <span class="sample-pill" onclick="quickFill('Elon Reeve Musk', 'leak')">Elon Reeve Musk</span>
+                    </div>
+
+                    <!-- Frosted Settings Drawer -->
+                    <div class="settings-card" id="settingsDrawer">
+                        <div class="settings-grid">
+                            <div class="setting-col">
+                                <label class="setting-label">
+                                    <span>🔑 LeakOSINT Token</span>
+                                    <span style="font-size:0.65rem;">
+                                        {% if server_has_token %}● Loaded from .env{% else %}100 free via /api bot{% endif %}
+                                    </span>
+                                </label>
+                                <input type="password" name="token" id="tokenInput" class="setting-input" 
+                                       placeholder="{% if server_has_token %}Server token active (enter override){% else %}Paste API token...{% endif %}" 
+                                       value="{{ user_token or '' }}">
+                            </div>
+
+                            <div class="setting-col">
+                                <label class="setting-label">
+                                    <span>📊 Limit</span>
+                                    <span style="font-size:0.65rem;">100-10000</span>
+                                </label>
+                                <select name="limit" id="limitSelect" class="setting-input" onchange="calcLiveCost()">
+                                    <option value="100" {% if limit == 100 or not limit %}selected{% endif %}>100 (Default)</option>
+                                    <option value="250" {% if limit == 250 %}selected{% endif %}>250</option>
+                                    <option value="500" {% if limit == 500 %}selected{% endif %}>500</option>
+                                    <option value="1000" {% if limit == 1000 %}selected{% endif %}>1,000</option>
+                                    <option value="2500" {% if limit == 2500 %}selected{% endif %}>2,500</option>
+                                    <option value="5000" {% if limit == 5000 %}selected{% endif %}>5,000</option>
+                                    <option value="10000" {% if limit == 10000 %}selected{% endif %}>10,000</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-col">
+                                <label class="setting-label">
+                                    <span>🌐 Language</span>
+                                    <span style="font-size:0.65rem;">Results</span>
+                                </label>
+                                <select name="lang" id="langSelect" class="setting-input">
+                                    <option value="en" {% if lang == 'en' or not lang %}selected{% endif %}>English (en)</option>
+                                    <option value="ru" {% if lang == 'ru' %}selected{% endif %}>Russian (ru)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Formula Ticker -->
+                        <div class="formula-bar">
+                            <span>📐 Formula: <code>0.0002 × (5 + √(Limit × Complexity))</code></span>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span id="calcComplexity">Complexity: 1</span>
+                                <span class="formula-cost-pill" id="calcPrice">Est: $0.00300</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+
+            <!-- ================= RESULTS AREA ================= -->
+            {% if query_value %}
+            <div class="results-wrapper" id="resultsSec">
+
+                <!-- 1. PHONE TELEMETRY CARD -->
+                {% if phone_result and (mode in ['smart', 'phone']) %}
+                <div class="results-glass-card">
+                    <div class="res-header">
+                        <div class="res-title-group">
+                            <span>📱</span>
+                            <span>Phone Telemetry &amp; Carrier Intelligence</span>
+                        </div>
+                        <div>
+                            {% if phone_result.valid %}
+                                <span class="res-badge success">● VALID ACTIVE NUMBER</span>
+                            {% elif phone_result.is_phone %}
+                                <span class="res-badge alert">● INVALID / UNLIKELY FORMAT</span>
+                            {% else %}
+                                <span class="res-badge">● NON-TELEPHONY TARGET</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if phone_result.valid or phone_result.is_phone %}
+                    <div class="bento-grid">
+                        <div class="bento-card">
+                            <span class="bento-lbl">Carrier / Network Operator</span>
+                            <span class="bento-val">{{ phone_result.carrier }}</span>
+                        </div>
+
+                        <div class="bento-card">
+                            <span class="bento-lbl">Geolocation &amp; Region</span>
+                            <span class="bento-val">
+                                <span id="flagEmoji">🌐</span>
+                                <span>{{ phone_result.location }}</span>
+                                <span style="font-size:0.8rem; opacity:0.8;">({{ phone_result.region_code }})</span>
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ phone_result.location | urlencode }}" target="_blank" rel="noopener" class="copy-btn-mini">
+                                    Maps ↗
+                                </a>
+                            </span>
+                        </div>
+
+                        <div class="bento-card">
+                            <span class="bento-lbl">Telephony Classification</span>
+                            <span class="bento-val">
+                                <span class="res-badge" style="background:rgba(255,255,255,0.9); font-size:0.75rem;">{{ phone_result.number_type }}</span>
+                            </span>
+                        </div>
+
+                        <div class="bento-card">
+                            <span class="bento-lbl">E.164 Global Standard</span>
+                            <span class="bento-val mono">
+                                <span>{{ phone_result.e164 }}</span>
+                                <button type="button" class="copy-btn-mini" onclick="copyData('{{ phone_result.e164 }}')">Copy</button>
+                            </span>
+                        </div>
+
+                        <div class="bento-card">
+                            <span class="bento-lbl">International Format</span>
+                            <span class="bento-val mono">
+                                <span>{{ phone_result.international }}</span>
+                                <button type="button" class="copy-btn-mini" onclick="copyData('{{ phone_result.international }}')">Copy</button>
+                            </span>
+                        </div>
+
+                        <div class="bento-card">
+                            <span class="bento-lbl">National Format</span>
+                            <span class="bento-val mono">
+                                <span>{{ phone_result.national }}</span>
+                                <button type="button" class="copy-btn-mini" onclick="copyData('{{ phone_result.national }}')">Copy</button>
+                            </span>
+                        </div>
+
+                        <div class="bento-card">
+                            <span class="bento-lbl">Dialing Codes</span>
+                            <span class="bento-val mono">
+                                <span>{{ phone_result.country_code }}</span> - <span>{{ phone_result.national_number }}</span>
+                            </span>
+                        </div>
+
+                        <div class="bento-card">
+                            <span class="bento-lbl">IANA Timezone(s)</span>
+                            <span class="bento-val" style="flex-wrap:wrap; gap:6px;">
+                                {% for tz in phone_result.timezones %}
+                                    <span class="res-badge" style="font-size:0.72rem; padding:0.2rem 0.6rem;">{{ tz }}</span>
+                                {% else %}
+                                    <span style="opacity:0.7; font-size:0.9rem;">Unknown</span>
+                                {% endfor %}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- 2. LEAKOSINT BREACH INTELLIGENCE CARD -->
+                {% if leak_result and (mode in ['smart', 'leak']) %}
+                <div class="results-glass-card">
+                    <div class="res-header">
+                        <div class="res-title-group">
+                            <span>🛡️</span>
+                            <span>LeakOSINT Database Breach Forensics</span>
+                        </div>
+                        <div>
+                            {% if leak_result.needs_token %}
+                                <span class="res-badge alert">🔑 TOKEN REQUIRED</span>
+                            {% elif not leak_result.success %}
+                                <span class="res-badge alert">⚠️ SCAN NOTICE</span>
+                            {% elif leak_result.has_results %}
+                                <span class="res-badge alert">🚨 {{ leak_result.total_records }} RECORDS IN {{ leak_result.total_databases }} BREACHES</span>
+                            {% else %}
+                                <span class="res-badge success">🛡️ TARGET CLEAN IN SCANNED DATABASES</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if leak_result.needs_token %}
+                    <div style="padding:2.5rem 2rem; text-align:center;">
+                        <h3 style="font-size:1.3rem; margin-bottom:0.6rem;">LeakOSINT Personal Token Required</h3>
+                        <p style="opacity:0.85; max-width:520px; margin:0 auto 1.4rem; font-size:0.92rem; line-height:1.6;">
+                            Connect to breached credential databases. Obtain your personal token with 100 free requests by sending <code>/api</code> in the LeakOSINT Telegram bot.
+                        </p>
+                        <button type="button" class="capsule-btn" style="margin:0 auto; display:inline-flex;" onclick="toggleSettingsDrawer(); document.getElementById('tokenInput').focus();">
+                            <span>Enter API Token</span> <span>→</span>
+                        </button>
+                    </div>
+
+                    {% elif not leak_result.success %}
+                    <div style="padding:1.6rem 2rem; background:rgba(239, 68, 68, 0.25); border-left:4px solid #ef4444; margin:1.5rem; border-radius:14px;">
+                        <strong>⚠️ Notice:</strong> {{ leak_result.error }}
+                    </div>
+
+                    {% elif leak_result.has_results %}
+                    <!-- Toolbar -->
+                    <div class="leak-toolbar">
+                        <input type="text" class="leak-filter" id="filterInput" placeholder="Filter passwords, emails, names..." oninput="filterBreachRecords()">
+                        <div class="leak-export-group">
+                            <button type="button" class="btn-export" onclick="copyRawJson()">Copy JSON</button>
+                            <button type="button" class="btn-export" onclick="downloadJsonFile()">Download JSON</button>
+                            <button type="button" class="btn-export" onclick="exportCsvFile()">Export CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- Database Feed -->
+                    <div class="db-feed-list" id="breachFeed">
+                        {% for db in leak_result.databases %}
+                        <div class="db-card-panel" data-db="{{ db.name }}">
+                            <div class="db-card-head">
+                                <span class="db-title">🗄️ {{ db.name }}</span>
+                                <span class="db-count">{{ db.count }} record(s)</span>
+                            </div>
+
+                            {% if db.info_leak %}
+                            <div class="db-infoleak">
+                                <strong>Leak Info:</strong> {{ db.info_leak }}
+                            </div>
+                            {% endif %}
+
+                            <div class="records-container">
+                                {% for rec in db.records %}
+                                <div class="record-card-box">
+                                    {% for col, val in rec.items() %}
+                                    <div class="rec-field-pair">
+                                        <span class="rec-field-key">{{ col }}</span>
+                                        <div class="rec-field-val {% if 'pass' in col.lower() or 'hash' in col.lower() %}highlight{% endif %}">
+                                            <span>{{ val }}</span>
+                                            <button type="button" class="rec-copy-icon" onclick="copyData('{{ val }}')" title="Copy value">📋</button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% else %}
+                    <div style="padding:3.5rem 2rem; text-align:center;">
+                        <div style="font-size:3rem; margin-bottom:0.8rem;">🛡️</div>
+                        <h3 style="font-size:1.4rem; font-weight:800; margin-bottom:0.4rem;">Target Clean Across Scanned Databases</h3>
+                        <p style="opacity:0.85; max-width:480px; margin:0 auto; font-size:0.95rem; line-height:1.6;">
+                            No exposed records were located in LeakOSINT breach databases for <code>{{ query_value }}</code> with a search depth limit of {{ leak_result.limit }}.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Raw JSON Storage for Exports -->
+    {% if leak_result and leak_result.raw_response %}
+    <script id="rawJsonData" type="application/json">
+        {{ leak_result.raw_response | tojson }}
+    </script>
+    {% endif %}
+
+    <!-- Toast Popup -->
+    <div id="bloomToast">Copied to clipboard!</div>
+
     <script>
-        // ========== INTERACTIVE PARTICLE BACKGROUND ==========
-        const canvas = document.getElementById('particleCanvas');
-        let ctx = canvas.getContext('2d');
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        
-        let particles = [];
-        const PARTICLE_COUNT = 140;
-        let mouseX = null, mouseY = null;
-        let hueBase = 210; // cool blue tint
+        // Mode Selection
+        const modeInput = document.getElementById('modeInput');
+        const queryInput = document.getElementById('queryInput');
+        const capsuleBadgeIcon = document.getElementById('capsuleBadgeIcon');
 
-        function resizeCanvas() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
+        function selectSearchMode(mode) {
+            modeInput.value = mode;
+            document.getElementById('pillSmart').classList.toggle('active', mode === 'smart');
+            document.getElementById('pillPhone').classList.toggle('active', mode === 'phone');
+            document.getElementById('pillLeak').classList.toggle('active', mode === 'leak');
+
+            if (mode === 'phone') {
+                queryInput.placeholder = 'Enter phone with country code (e.g. +14155552671)...';
+                capsuleBadgeIcon.innerText = '📞';
+            } else if (mode === 'leak') {
+                queryInput.placeholder = 'Enter query: email, name, username, IP, or phone...';
+                capsuleBadgeIcon.innerText = '🛡️';
+            } else {
+                queryInput.placeholder = 'Enter phone (+14155552671), email, or name...';
+                capsuleBadgeIcon.innerText = '🔍';
+            }
+            calcLiveCost();
         }
 
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.size = Math.random() * 2.5 + 1.2;
-                this.speedX = (Math.random() - 0.5) * 0.4;
-                this.speedY = (Math.random() - 0.5) * 0.3;
-                this.alpha = Math.random() * 0.5 + 0.2;
-                this.color = `hsla(${hueBase + Math.random() * 30}, 75%, 65%, ${this.alpha})`;
-                this.waveOffset = Math.random() * Math.PI * 2;
+        function setModeAndFocus(mode) {
+            selectSearchMode(mode);
+            queryInput.focus();
+        }
+
+        function quickFill(val, mode) {
+            selectSearchMode(mode);
+            queryInput.value = val;
+            queryInput.focus();
+            calcLiveCost();
+        }
+
+        // Settings Drawer Toggle
+        const settingsDrawer = document.getElementById('settingsDrawer');
+        const tokenInput = document.getElementById('tokenInput');
+        const limitSelect = document.getElementById('limitSelect');
+        const TOKEN_STORE_KEY = 'bloom_leakosint_token';
+
+        function toggleSettingsDrawer() {
+            settingsDrawer.classList.toggle('open');
+        }
+
+        if (tokenInput) {
+            if (!tokenInput.value) {
+                const saved = localStorage.getItem(TOKEN_STORE_KEY);
+                if (saved) tokenInput.value = saved;
             }
-            
-            update() {
-                // gentle sine wave drift + mouse repulsion
-                let dx = 0, dy = 0;
-                if (mouseX !== null && mouseY !== null) {
-                    let distX = this.x - mouseX;
-                    let distY = this.y - mouseY;
-                    let dist = Math.sqrt(distX * distX + distY * distY);
-                    if (dist < 120) {
-                        let force = (120 - dist) / 120;
-                        dx += (distX / dist) * force * 1.2;
-                        dy += (distY / dist) * force * 1.2;
+            tokenInput.addEventListener('change', () => {
+                if (tokenInput.value.trim()) localStorage.setItem(TOKEN_STORE_KEY, tokenInput.value.trim());
+                else localStorage.removeItem(TOKEN_STORE_KEY);
+            });
+        }
+
+        // Live Complexity and Cost Calculation
+        function computeComp(str) {
+            if (!str) return 1;
+            let quoted = str.match(/"([^"]+)"/g) || [];
+            let unquoted = str.replace(/"[^"]+"/g, ' ');
+            let words = [];
+
+            for (let q of quoted) {
+                let trimmed = q.replace(/"/g, '').trim();
+                if (trimmed) words.push(trimmed);
+            }
+
+            for (let w of unquoted.split(/\s+/)) {
+                let clean = w.replace(/^[.,!?:;()\[\]{}<>"']+|[.,!?:;()\[\]{}<>"']+$/g, '');
+                if (!clean) continue;
+                if (/^\d{1,4}[-./]\d{1,2}[-./]\d{1,4}$/.test(clean)) continue;
+                if (/^\d+$/.test(clean) && clean.length < 6) continue;
+                if (clean.length < 4) continue;
+                words.push(clean);
+            }
+
+            let count = words.length;
+            if (count <= 1) return 1;
+            if (count === 2) return 5;
+            if (count === 3) return 16;
+            return 40;
+        }
+
+        function calcLiveCost() {
+            let q = queryInput.value.trim();
+            let limit = parseInt(limitSelect.value) || 100;
+            let comp = computeComp(q);
+            let cost = 0.0002 * (5 + Math.sqrt(limit * comp));
+
+            document.getElementById('calcComplexity').innerText = `Complexity: ${comp}`;
+            document.getElementById('calcPrice').innerText = `Est: $${cost.toFixed(5)}`;
+        }
+        queryInput.addEventListener('input', calcLiveCost);
+        calcLiveCost();
+
+        // Flag Emoji helper
+        {% if phone_result and phone_result.region_code %}
+        (function() {
+            let rc = '{{ phone_result.region_code }}';
+            let flagEl = document.getElementById('flagEmoji');
+            if (rc && rc.length === 2 && rc !== 'Unknown' && flagEl) {
+                flagEl.innerText = String.fromCodePoint(...rc.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0)));
+            }
+        })();
+        {% endif %}
+
+        // Filter breach records in real time
+        function filterBreachRecords() {
+            let term = document.getElementById('filterInput').value.toLowerCase().trim();
+            let cards = document.querySelectorAll('.db-card-panel');
+
+            cards.forEach(card => {
+                let boxes = card.querySelectorAll('.record-card-box');
+                let hasMatch = false;
+
+                boxes.forEach(box => {
+                    let txt = box.innerText.toLowerCase();
+                    if (!term || txt.includes(term)) {
+                        box.style.display = 'grid';
+                        hasMatch = true;
+                    } else {
+                        box.style.display = 'none';
                     }
-                }
-                // wave effect for smooth motion
-                this.speedX += (Math.sin(Date.now() * 0.001 + this.waveOffset) * 0.005) + dx * 0.03;
-                this.speedY += (Math.cos(Date.now() * 0.0008 + this.waveOffset) * 0.005) + dy * 0.03;
-                
-                // limit speed
-                let maxSpeed = 0.9;
-                this.speedX = Math.min(maxSpeed, Math.max(-maxSpeed, this.speedX));
-                this.speedY = Math.min(maxSpeed, Math.max(-maxSpeed, this.speedY));
-                
-                this.x += this.speedX;
-                this.y += this.speedY;
-                
-                // wrap around edges with smooth respawn
-                if (this.x < -20) this.x = width + 20;
-                if (this.x > width + 20) this.x = -20;
-                if (this.y < -20) this.y = height + 20;
-                if (this.y > height + 20) this.y = -20;
-                
-                // dynamic color shifting based on position
-                let newHue = (hueBase + (this.x * 0.05) % 30 + (this.y * 0.03) % 20) % 360;
-                this.color = `hsla(${newHue}, 80%, 68%, ${this.alpha * 0.8})`;
-            }
-            
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                // soft glow
-                ctx.shadowBlur = 6;
-                ctx.shadowColor = "rgba(100, 180, 255, 0.6)";
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
+                });
+
+                card.style.display = hasMatch ? 'block' : 'none';
+            });
         }
 
-        function initParticles() {
-            particles = [];
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                particles.push(new Particle());
+        // Copy and Toast helpers
+        function copyData(text) {
+            if (!navigator.clipboard) {
+                let ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            } else {
+                navigator.clipboard.writeText(text);
             }
+            showToast('Copied: ' + text.slice(0, 30));
         }
 
-        function drawConnections() {
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    let dx = particles[i].x - particles[j].x;
-                    let dy = particles[i].y - particles[j].y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 110) {
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        let opacity = (1 - distance / 110) * 0.2;
-                        ctx.strokeStyle = `rgba(140, 200, 255, ${opacity * 0.7})`;
-                        ctx.lineWidth = 1;
-                        ctx.stroke();
-                    }
-                }
-            }
+        function showToast(msg) {
+            const toast = document.getElementById('bloomToast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2200);
         }
 
-        let starryLayer = [];
-
-        function initStars() {
-            for (let i = 0; i < 200; i++) {
-                starryLayer.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    radius: Math.random() * 1.2,
-                    alpha: Math.random() * 0.5 + 0.2,
+        function copyRawJson() {
+            const el = document.getElementById('rawJsonData');
+            if (el) {
+                navigator.clipboard.writeText(JSON.stringify(JSON.parse(el.textContent), null, 2)).then(() => {
+                    showToast('Full LeakOSINT JSON copied!');
                 });
             }
         }
 
-        function drawStars() {
-            for (let s of starryLayer) {
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 240, 200, ${s.alpha * 0.5})`;
-                ctx.fill();
-            }
+        function downloadJsonFile() {
+            const el = document.getElementById('rawJsonData');
+            if (!el) return;
+            const blob = new Blob([JSON.stringify(JSON.parse(el.textContent), null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `LeakOSINT_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Downloaded JSON report');
         }
 
-        function animateBackground() {
-            if (!ctx) return;
-            ctx.clearRect(0, 0, width, height);
-            // radial gradient background for extra depth
-            let grad = ctx.createRadialGradient(width * 0.5, height * 0.6, 80, width * 0.5, height * 0.6, width * 0.7);
-            grad.addColorStop(0, '#0a0f2a');
-            grad.addColorStop(1, '#030b1a');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, width, height);
-            
-            // draw tiny stars
-            drawStars();
-            
-            // update and draw particles
-            for (let p of particles) {
-                p.update();
-                p.draw();
-            }
-            drawConnections();
-            
-            requestAnimationFrame(animateBackground);
-        }
+        function exportCsvFile() {
+            const el = document.getElementById('rawJsonData');
+            if (!el) return;
+            try {
+                let data = JSON.parse(el.textContent);
+                let rows = [];
+                let headers = new Set(['Database', 'InfoLeak']);
+                let recordsList = [];
 
-        function handleMouseMove(e) {
-            let rect = canvas.getBoundingClientRect();
-            let scaleX = canvas.width / rect.width;
-            let scaleY = canvas.height / rect.height;
-            mouseX = (e.clientX - rect.left) * scaleX;
-            mouseY = (e.clientY - rect.top) * scaleY;
-        }
-        
-        function handleMouseLeave() {
-            mouseX = null;
-            mouseY = null;
-        }
-
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            initParticles();
-            starryLayer.length = 0;
-            initStars();
-        });
-        
-        resizeCanvas();
-        initParticles();
-        initStars();
-        animateBackground();
-        
-        canvas.addEventListener('mousemove', handleMouseMove);
-        canvas.addEventListener('mouseleave', handleMouseLeave);
-        
-        // ========== FORM LOADING GLASS EFFECT ==========
-        const formElem = document.getElementById('lookupForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const phoneInputElem = document.getElementById('phoneInput');
-        
-        if (formElem) {
-            formElem.addEventListener('submit', function(e) {
-                let phoneVal = phoneInputElem.value.trim();
-                if (!phoneVal) {
-                    e.preventDefault();
-                    alert('📞 Please enter a phone number with country code (starting with +)');
-                    return;
-                }
-                if (!phoneVal.includes('+') && phoneVal.length > 2) {
-                    if (!confirm('⚠️ The number should include country code like +44 or +1. Continue anyway?')) {
-                        e.preventDefault();
-                        return;
+                if (data.List) {
+                    for (let db in data.List) {
+                        if (db === 'No results found') continue;
+                        let info = data.List[db].InfoLeak || '';
+                        let d = data.List[db].Data || [];
+                        for (let rec of d) {
+                            let flat = { 'Database': db, 'InfoLeak': info, ...rec };
+                            Object.keys(rec).forEach(k => headers.add(k));
+                            recordsList.push(flat);
+                        }
                     }
                 }
-                submitBtn.classList.add('loading-effect');
-                submitBtn.innerHTML = '<span>🌀</span> Validating...';
-                submitBtn.style.opacity = '0.9';
-                // form will submit naturally, but ui freezes just for style
-            });
+
+                let headerArr = Array.from(headers);
+                rows.push(headerArr.map(h => `"${h}"`).join(','));
+                for (let r of recordsList) {
+                    let row = headerArr.map(h => `"${(r[h] || '').toString().replace(/"/g, '""')}"`);
+                    rows.push(row.join(','));
+                }
+
+                let csv = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join('\n'));
+                let a = document.createElement('a');
+                a.href = csv;
+                a.download = `LeakOSINT_${Date.now()}.csv`;
+                a.click();
+                showToast('Downloaded CSV export');
+            } catch (err) {
+                alert('Could not export CSV: ' + err);
+            }
         }
-        
-        // additional subtle glow for input
-        const wrapperDiv = document.querySelector('.input-wrapper');
-        if (phoneInputElem && wrapperDiv) {
-            phoneInputElem.addEventListener('focus', () => {
-                wrapperDiv.style.borderColor = 'rgba(120, 180, 255, 0.9)';
-                wrapperDiv.style.boxShadow = '0 0 0 3px rgba(70, 130, 255, 0.4)';
-            });
-            phoneInputElem.addEventListener('blur', () => {
-                wrapperDiv.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-                wrapperDiv.style.boxShadow = 'none';
-            });
-        }
+
+        // Submit Button animation
+        const form = document.getElementById('searchForm');
+        const submitBtn = document.getElementById('submitBtn');
+        form.addEventListener('submit', () => {
+            submitBtn.innerHTML = '<span>Scanning...</span> <span>🌀</span>';
+            submitBtn.style.opacity = '0.85';
+            submitBtn.style.pointerEvents = 'none';
+        });
     </script>
 </body>
 </html>
